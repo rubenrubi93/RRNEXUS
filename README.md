@@ -1,29 +1,25 @@
 # R&R NEXUS — Business Platform
 
-Plataforma independiente de **R&R Business & Fitness Consulting** para gestionar oportunidades comerciales, clientes, proyectos de consultoría, tareas e informes.
+Plataforma de R&R Business & Fitness Consulting para gestionar proyectos, tareas y clientes con espacios de trabajo separados.
 
-## Prototipo actual
-- Dashboard de actividad.
-- CRM de leads y oportunidades.
-- Gestión de proyectos y seguimiento de avance.
-- Directorio de clientes y previsualización del portal.
-- Gestión de tareas.
-- Exportación de datos demo a JSON.
-- Interfaz responsive con estética dark y acento turquesa `#00D7B7`.
+## En este repositorio
+- `index.html`: interfaz de acceso y dashboard conectado a Supabase.
+- `config.js`: configuración pública de Supabase (plantilla; hay que completar).
+- `supabase/schema.sql`: esquema inicial multiempresa y políticas RLS.
+- `prototype.html`: prototipo original con datos de demostración, conservado como referencia.
+- `.github/workflows/pages.yml`: flujo de despliegue estático en GitHub Pages.
 
-## Ejecutar
-Abre `index.html` en un navegador. Esta versión guarda los datos en el almacenamiento local del navegador.
+## Estado real
+La interfaz y el esquema inicial están preparados, pero **el servicio todavía no está operativo**: requiere un proyecto Supabase, aplicar y revisar el SQL, configurar URL y clave publicable, crear usuarios y membresías y activar GitHub Pages. No uses datos reales de clientes ni invites clientes hasta completar y probar estos pasos. El repositorio se ha detectado como público; cámbialo a privado desde Settings si quieres mantener el código fuente privado.
 
-## Importante: estado del producto
-Esta entrega es un **prototipo de interfaz**, no un servicio listo para clientes. No incluye autenticación real, backend, base de datos compartida ni aislamiento seguro entre clientes. La vista de portal es una simulación. No introduzcas información confidencial ni datos reales de clientes.
+## Puesta en marcha
+1. Crea un proyecto Supabase en la organización/cuenta de R&R.
+2. En SQL Editor, revisa y aplica `supabase/schema.sql`.
+3. Completa `config.js` con Project URL y publishable/anon key. Solo se permite la clave pública con RLS activo; nunca uses `service_role`.
+4. En Supabase Auth, configura la URL del sitio y las redirect URLs de GitHub Pages.
+5. En Supabase, crea la empresa y usuarios; inserta las filas correspondientes en `user_profiles` y `company_members` usando un proceso de administración de confianza.
+6. En GitHub, abre Settings → Pages y selecciona **GitHub Actions** como source. El workflow publicará el sitio al hacer push a `main`.
+7. Prueba con dos usuarios de empresas diferentes que no puedan consultar, insertar ni modificar datos de la otra empresa antes de uso real.
 
-## Siguiente fase recomendada
-1. Definir identidad visual definitiva y añadir los assets oficiales del logo.
-2. Crear aplicación con autenticación y roles (administrador R&R, consultor y cliente).
-3. Configurar base de datos multi-tenant y políticas de acceso por cliente (por ejemplo Supabase Row Level Security).
-4. Añadir almacenamiento privado de documentos, auditoría y copias de seguridad.
-5. Desplegar en un hosting independiente con dominio propio y configuración de privacidad/GDPR.
-6. Probar permisos y aislamiento de datos antes de dar acceso a clientes.
-
-## Independencia
-Este repositorio es el hogar de R&R NEXUS y está separado del repositorio de VivaGym. No se deben guardar aquí credenciales, tokens, datos personales reales ni información confidencial.
+## Seguridad y límites
+La aplicación utiliza Supabase Auth y espera que RLS proteja cada fila. El SQL es un punto de partida que debe auditarse y probarse antes de producción. Los usuarios cliente pueden leer proyectos/tareas de sus empresas; solo roles admin/consultant pueden gestionarlos. El formulario de creación de proyectos está sujeto a RLS. El portal cliente no debe considerarse listo para producción hasta completar las pruebas de aislamiento, gestión de invitaciones, recuperación de contraseña, registro de auditoría y protección de datos.
