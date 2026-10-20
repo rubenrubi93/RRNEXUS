@@ -10,7 +10,7 @@ create table if not exists public.companies (
 create table if not exists public.user_profiles (
  user_id uuid primary key references auth.users(id) on delete cascade,
  full_name text,
- role text not null default 'client' check (role in ('admin','consultant','client')),
+ role text not null default 'client' check (role in ('master_admin','admin','consultant','client')),
  created_at timestamptz not null default now()
 );
 create table if not exists public.company_members (
