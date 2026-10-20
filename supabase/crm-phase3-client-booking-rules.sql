@@ -132,7 +132,7 @@ $;
 
 drop trigger if exists crm_waitlist_entry_guard on public.crm_waitlist;
 create trigger crm_waitlist_entry_guard
-before insert or update of session_id, client_id, status on public.crm_waitlist
+before insert on public.crm_waitlist
 for each row execute function public.crm_validate_waitlist_entry();
 revoke all on function public.crm_validate_waitlist_entry() from public, anon, authenticated;
 
