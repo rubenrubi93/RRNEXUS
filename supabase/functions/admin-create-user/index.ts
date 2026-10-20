@@ -33,24 +33,33 @@ Deno.serve(async (req) => {
   if (profileError) return reply({ error: "Could not verify administrator role" }, 500);
   if (profile?.role !== "master_admin") return reply({ error: "Master administrator permission required" }, 403);
 
-  let body: { fullName?: string; email?: string; role?: string; companyName?: string; logoUrl?: string | null };
+  let body: { fullName?: string; email?: string; role?: string; companyName?: string; logoUrl?: string | null; initialPassword?: string };
   try { body = await req.json(); } catch { return reply({ error: "Invalid JSON" }, 400); }
   const fullName = String(body.fullName || "").trim();
   const email = String(body.email || "").trim().toLowerCase();
   const role = String(body.role || "client");
   const companyName = String(body.companyName || "").trim();
   const logoUrl = body.logoUrl ? String(body.logoUrl).trim() : null;
+  const initialPassword = String(body.initialPassword || "");
+  if (initialPassword && (initialPassword.length < 10 || initialPassword.length > 72)) {
+    return reply({ error: "La contraseña inicial debe tener entre 10 y 72 caracteres." }, 400);
+  }
   if (!fullName || fullName.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       !companyName || companyName.length > 160 || !["client", "consultant", "admin"].includes(role)) {
     return reply({ error: "Check name, email, company and role fields" }, 400);
   }
 
-  // Invite the user first; never accept passwords or expose service_role to the browser.
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName },
-    redirectTo: "https://rubenrubi93.github.io/RRNEXUS/",
-  });
-  if (inviteError || !invited.user) return reply({ error: inviteError?.message || "Invitation failed" }, 400);
+  // Passwords are accepted only by this server-side function after verifying master_admin.
+  // If no initial password is supplied, keep the existing email invitation workflow.
+  const created = initialPassword
+    ? await admin.auth.admin.createUser({ email, password: initialPassword, email_confirm: true, user_metadata: { full_name: fullName } })
+    : await admin.auth.admin.inviteUserByEmail(email, {
+        data: { full_name: fullName },
+        redirectTo: "https://rubenrubi93.github.io/RRNEXUS/",
+      });
+  const invited = created.data;
+  const inviteError = created.error;
+  if (inviteError || !invited.user) return reply({ error: inviteError?.message || "User creation failed" }, 400);
 
   const { data: company, error: companyError } = await admin
     .from("companies").insert({ name: companyName, logo_url: logoUrl }).select("id,name").single();
@@ -72,5 +81,5 @@ Deno.serve(async (req) => {
     await admin.auth.admin.deleteUser(invited.user.id);
     return reply({ error: "User was invited but setup failed; cleanup attempted. Check function logs." }, 500);
   }
-  return reply({ ok: true, email, fullName, role, companyName: company.name, invitationSent: true });
+  return reply({ ok: true, email, fullName, role, companyName: company.name, invitationSent: !initialPassword, passwordConfigured: !!initialPassword });
 });
