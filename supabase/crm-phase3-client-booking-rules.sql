@@ -83,7 +83,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_user_id uuid;
   v_waitlist_enabled boolean;
@@ -128,7 +128,7 @@ begin
   new.updated_at := now();
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists crm_waitlist_entry_guard on public.crm_waitlist;
 create trigger crm_waitlist_entry_guard
