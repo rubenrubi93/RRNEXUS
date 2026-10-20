@@ -75,14 +75,66 @@ with check (
       and s.company_id = crm_waitlist.company_id
       and s.status = 'scheduled'
       and s.starts_at > now()
-      and s.starts_at <= now() + make_interval(days => c.booking_window_days)
-      and c.waitlist_enabled = true
-      and (
-        select count(*) from public.crm_bookings b
-        where b.session_id = s.id and b.status = 'booked'
-      ) >= s.capacity
   )
 );
+
+create or replace function public.crm_validate_waitlist_entry()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_user_id uuid;
+  v_waitlist_enabled boolean;
+  v_window_days integer;
+  v_starts_at timestamptz;
+  v_capacity integer;
+  v_status text;
+  v_booked_count integer;
+begin
+  select c.user_id, c.waitlist_enabled, c.booking_window_days
+    into v_user_id, v_waitlist_enabled, v_window_days
+  from public.crm_clients c
+  where c.id = new.client_id and c.company_id = new.company_id;
+
+  if not found or v_user_id is distinct from (select auth.uid()) then
+    raise exception 'Solo puedes apuntarte a la lista de espera de tu propia ficha.';
+  end if;
+  if not v_waitlist_enabled then
+    raise exception 'La lista de espera no está habilitada para tu cuenta.';
+  end if;
+
+  select s.starts_at, s.capacity, s.status
+    into v_starts_at, v_capacity, v_status
+  from public.crm_sessions s
+  where s.id = new.session_id and s.company_id = new.company_id
+  for update;
+
+  if not found or v_status <> 'scheduled' then
+    raise exception 'La sesión no está disponible para lista de espera.';
+  end if;
+  if v_starts_at <= now() or v_starts_at > now() + make_interval(days => v_window_days) then
+    raise exception 'La sesión está fuera de tu ventana de reserva (% días).', v_window_days;
+  end if;
+
+  select count(*) into v_booked_count
+  from public.crm_bookings b
+  where b.session_id = new.session_id and b.status = 'booked';
+  if v_booked_count < v_capacity then
+    raise exception 'La sesión todavía tiene plazas; puedes reservar directamente.';
+  end if;
+
+  new.updated_at := now();
+  return new;
+end;
+$;
+
+drop trigger if exists crm_waitlist_entry_guard on public.crm_waitlist;
+create trigger crm_waitlist_entry_guard
+before insert or update of session_id, client_id, status on public.crm_waitlist
+for each row execute function public.crm_validate_waitlist_entry();
+revoke all on function public.crm_validate_waitlist_entry() from public, anon, authenticated;
 
 drop policy if exists crm_waitlist_update_staff on public.crm_waitlist;
 create policy crm_waitlist_update_staff
