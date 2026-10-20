@@ -25,7 +25,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p _site/supabase
-          cp index.html config.js _site/
+          cp index.html report-builder.html config.js _site/
           cp -r assets _site/assets
           cp supabase/schema.sql _site/supabase/schema.sql
       - name: Upload Pages artifact
