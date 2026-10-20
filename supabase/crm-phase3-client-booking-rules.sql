@@ -75,6 +75,12 @@ with check (
       and s.company_id = crm_waitlist.company_id
       and s.status = 'scheduled'
       and s.starts_at > now()
+      and s.starts_at <= now() + make_interval(days => c.booking_window_days)
+      and c.waitlist_enabled = true
+      and (
+        select count(*) from public.crm_bookings b
+        where b.session_id = s.id and b.status = 'booked'
+      ) >= s.capacity
   )
 );
 
