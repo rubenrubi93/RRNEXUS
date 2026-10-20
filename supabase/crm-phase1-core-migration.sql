@@ -182,7 +182,7 @@ create policy crm_clients_read_authorized on public.crm_clients
 for select to authenticated
 using (
   user_id = auth.uid()
-  or public.crm_has_role(company_id, array['owner','admin','reception','sales','trainer'])
+  or public.crm_has_role(company_id, array['owner','admin','reception','sales'])
 );
 
 drop policy if exists crm_clients_create_staff on public.crm_clients;
