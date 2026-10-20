@@ -33,12 +33,13 @@ Deno.serve(async (req) => {
   if (profileError) return reply({ error: "Could not verify administrator role" }, 500);
   if (profile?.role !== "master_admin") return reply({ error: "Master administrator permission required" }, 403);
 
-  let body: { fullName?: string; email?: string; role?: string; companyName?: string };
+  let body: { fullName?: string; email?: string; role?: string; companyName?: string; logoUrl?: string | null };
   try { body = await req.json(); } catch { return reply({ error: "Invalid JSON" }, 400); }
   const fullName = String(body.fullName || "").trim();
   const email = String(body.email || "").trim().toLowerCase();
   const role = String(body.role || "client");
   const companyName = String(body.companyName || "").trim();
+  const logoUrl = body.logoUrl ? String(body.logoUrl).trim() : null;
   if (!fullName || fullName.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       !companyName || companyName.length > 160 || !["client", "consultant", "admin"].includes(role)) {
     return reply({ error: "Check name, email, company and role fields" }, 400);
@@ -47,11 +48,12 @@ Deno.serve(async (req) => {
   // Invite the user first; never accept passwords or expose service_role to the browser.
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: fullName },
+    options: { redirectTo: "https://rubenrubi93.github.io/RRNEXUS/" },
   });
   if (inviteError || !invited.user) return reply({ error: inviteError?.message || "Invitation failed" }, 400);
 
   const { data: company, error: companyError } = await admin
-    .from("companies").insert({ name: companyName }).select("id,name").single();
+    .from("companies").insert({ name: companyName, logo_url: logoUrl }).select("id,name").single();
   if (companyError || !company) {
     await admin.auth.admin.deleteUser(invited.user.id);
     return reply({ error: "Could not create company" }, 500);
