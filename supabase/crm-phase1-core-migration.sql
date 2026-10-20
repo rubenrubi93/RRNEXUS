@@ -140,6 +140,10 @@ alter table public.crm_clients enable row level security;
 alter table public.crm_services enable row level security;
 alter table public.crm_products enable row level security;
 
+-- Denegar explícitamente acceso anónimo; RLS y grants son controles complementarios.
+revoke all on public.crm_company_memberships, public.crm_locations, public.crm_staff_profiles,
+  public.crm_clients, public.crm_services, public.crm_products from anon;
+
 drop policy if exists crm_memberships_read_self_or_admin on public.crm_company_memberships;
 create policy crm_memberships_read_self_or_admin on public.crm_company_memberships
 for select to authenticated
@@ -191,16 +195,14 @@ for insert to authenticated
 with check (public.crm_has_role(company_id, array['owner','admin','reception','sales']));
 
 drop policy if exists crm_clients_update_staff_or_self on public.crm_clients;
-create policy crm_clients_update_staff_or_self on public.crm_clients
+drop policy if exists crm_clients_update_authorized_staff on public.crm_clients;
+create policy crm_clients_update_authorized_staff on public.crm_clients
 for update to authenticated
-using (
-  public.crm_has_role(company_id, array['owner','admin','reception','sales'])
-  or user_id = auth.uid()
-)
-with check (
-  public.crm_has_role(company_id, array['owner','admin','reception','sales'])
-  or user_id = auth.uid()
-);
+using (public.crm_has_role(company_id, array['owner','admin','reception','sales']))
+with check (public.crm_has_role(company_id, array['owner','admin','reception','sales']));
+
+-- Los clientes solo tienen lectura propia en esta fase.
+-- Para editar su perfil se añadirá una operación limitada a columnas permitidas o una función RPC.
 
 drop policy if exists crm_services_read_member on public.crm_services;
 create policy crm_services_read_member on public.crm_services
