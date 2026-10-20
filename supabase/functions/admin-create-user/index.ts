@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   // Invite the user first; never accept passwords or expose service_role to the browser.
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: fullName },
-    options: { redirectTo: "https://rubenrubi93.github.io/RRNEXUS/" },
+    redirectTo: "https://rubenrubi93.github.io/RRNEXUS/",
   });
   if (inviteError || !invited.user) return reply({ error: inviteError?.message || "Invitation failed" }, 400);
 
