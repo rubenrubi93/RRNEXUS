@@ -58,7 +58,7 @@ returns table(session_id uuid, booked_count bigint, session_capacity integer)
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   if not exists (
     select 1 from public.crm_clients c
@@ -77,7 +77,7 @@ begin
       and s.starts_at > now()
     group by s.id, s.capacity;
 end;
-$;
+$$;
 revoke all on function public.crm_client_session_availability(uuid) from public, anon;
 grant execute on function public.crm_client_session_availability(uuid) to authenticated;
 
