@@ -188,6 +188,13 @@ begin
     end if;
 
     if v_weekly_limit > 0 then
+      -- Serializa reservas del mismo cliente y semana para evitar superar el límite con peticiones simultáneas.
+      perform pg_advisory_xact_lock(
+        hashtextextended(
+          new.client_id::text || ':' || date_trunc('week', v_starts_at)::text,
+          0
+        )
+      );
       select count(*) into v_week_count
       from public.crm_bookings b
       join public.crm_sessions s on s.id = b.session_id
