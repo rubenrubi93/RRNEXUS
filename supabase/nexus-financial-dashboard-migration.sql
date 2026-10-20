@@ -2,7 +2,10 @@
 -- Ejecutar en Supabase SQL Editor después de nexus-management-migration.sql.
 alter table public.business_metrics
   add column if not exists fixed_costs numeric,
-  add column if not exists variable_cost_pct numeric;
+  add column if not exists variable_cost_pct numeric,
+  add column if not exists opening_members integer,
+  add column if not exists cash_inflows numeric,
+  add column if not exists cash_outflows numeric;
 
 create table if not exists public.sales_entries (
   id uuid primary key default gen_random_uuid(),
