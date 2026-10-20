@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#00ffd0"/><stop offset="1" stop-color="#00a99b"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="512" height="512" rx="256" fill="#020605"/>
+<circle cx="256" cy="256" r="235" fill="none" stroke="url(#g)" stroke-width="9" filter="url(#glow)"/>
+<g font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="205" text-anchor="middle"><text x="190" y="300" fill="url(#g)">R</text><text x="315" y="300" fill="#f7fbfa">R</text></g>
+<path d="M190 342 L274 255 L311 285 L410 150" fill="none" stroke="url(#g)" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter" filter="url(#glow)"/><path d="M374 159 L418 139 L409 190" fill="none" stroke="#00ffd0" stroke-width="18" stroke-linejoin="miter"/>
+<path d="M85 372 H165 M347 372 H427" stroke="#00e9c4" stroke-width="3"/>
+<text x="256" y="389" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="31" letter-spacing="9" text-anchor="middle">CONSULTING</text>
+</svg>
